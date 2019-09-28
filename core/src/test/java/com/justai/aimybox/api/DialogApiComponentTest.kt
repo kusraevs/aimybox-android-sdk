@@ -1,10 +1,10 @@
 package com.justai.aimybox.api
 
+import com.google.gson.JsonObject
 import com.justai.aimybox.BaseCoroutineTest
 import com.justai.aimybox.core.AimyboxException
 import com.justai.aimybox.core.ApiRequestTimeoutException
 import com.justai.aimybox.model.Request
-import com.justai.aimybox.model.Response
 import io.mockk.coEvery
 import io.mockk.every
 import io.mockk.mockk
@@ -37,7 +37,8 @@ class DialogApiComponentTest : BaseCoroutineTest() {
     fun `Regular request`() {
         runInTestContext {
             val testRequest = Request("Test query")
-            val testResponse = Response(testRequest.query, "Test response")
+            val testResponse =
+                AimyboxResponse(testRequest.query, "Test response", json = JsonObject())
 
             every { mockDelegate.getRequestTimeoutMs() } returns 300
             coEvery { mockDelegate.send(testRequest) } coAnswers {
@@ -58,7 +59,8 @@ class DialogApiComponentTest : BaseCoroutineTest() {
     fun `Request timeout`() {
         runInTestContext {
             val testRequest = Request("Test query")
-            val testResponse = Response(testRequest.query, "Test response")
+            val testResponse =
+                AimyboxResponse(testRequest.query, "Test response", json = JsonObject())
 
             every { mockDelegate.getRequestTimeoutMs() } returns 300
             coEvery { mockDelegate.send(testRequest) } coAnswers {
@@ -79,7 +81,8 @@ class DialogApiComponentTest : BaseCoroutineTest() {
     fun `Request cancelled`() {
         runInTestContext {
             val testRequest = Request("Test query")
-            val testResponse = Response(testRequest.query, "Test response")
+            val testResponse =
+                AimyboxResponse(testRequest.query, "Test response", json = JsonObject())
 
             every { mockDelegate.getRequestTimeoutMs() } returns 300
             coEvery { mockDelegate.send(testRequest) } coAnswers {
