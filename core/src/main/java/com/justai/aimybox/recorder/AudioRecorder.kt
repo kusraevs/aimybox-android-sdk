@@ -57,7 +57,7 @@ class AudioRecorder(
      *
      * @return a channel of ByteArrays which contains recorded audio data.
      * */
-    fun startAudioRecording() = produce(capacity = outputChannelBufferSizeChunks) {
+    fun startAudioRecording() = with(Channel<ByteArray>(outputChannelBufferSizeChunks)) {
         val minBufferSize = AudioRecord.getMinBufferSize(sampleRate, channelConfig, audioFormat)
         require(minBufferSize != AudioRecord.ERROR && minBufferSize != AudioRecord.ERROR_BAD_VALUE) {
             "Sample rate $sampleRate is not supported."
@@ -107,6 +107,8 @@ class AudioRecorder(
         } finally {
             L.i("Recording finished")
         }
+
+        this
     }
 
     /**
