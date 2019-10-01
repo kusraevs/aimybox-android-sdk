@@ -33,7 +33,7 @@ class SnipsKit(
 
     override val coroutineContext: CoroutineContext = Dispatchers.IO + Job()
 
-    private val recorder = SnipsAudioRecorder()
+    private val recorder = AudioRecorder("snips")
 
     private val client = SnipsPlatformClient.Builder(assets.modelDirPath)
         .enableDialogue(true)
@@ -116,7 +116,7 @@ class SnipsKit(
     }
 
     private fun startRecording() {
-        val audioDataChannel = recorder.startRecording()
+        val audioDataChannel = recorder.startRecordingShorts()
         L.d("Recording was started")
 
         launch {
@@ -129,9 +129,9 @@ class SnipsKit(
 
     private fun stopRecording() {
         launch {
-            recorder.stopRecording()
+            recorder.stopAudioRecording()
+            L.d("Recording was stopped")
         }
-        L.d("Recording was stopped")
     }
 
     val speechToText = object : SpeechToText() {
