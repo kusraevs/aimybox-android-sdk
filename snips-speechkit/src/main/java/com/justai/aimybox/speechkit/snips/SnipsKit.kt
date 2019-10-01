@@ -31,10 +31,9 @@ class SnipsKit(
 //    enableInjection: Boolean = false
 ): CoroutineScope {
 
-    private val job = Job()
-    override val coroutineContext: CoroutineContext = Dispatchers.IO + job
+    override val coroutineContext: CoroutineContext = Dispatchers.IO + Job()
 
-    private val recorder = AudioRecorder()
+    private val recorder = SnipsAudioRecorder()
 
     private val client = SnipsPlatformClient.Builder(assets.modelDirPath)
         .enableDialogue(true)
@@ -117,23 +116,27 @@ class SnipsKit(
     }
 
     private fun startRecording() {
-        val audioDataChannel = recorder.startAudioRecording().convertBytesToShorts()
+        val audioDataChannel = recorder.startRecording()
         L.d("Recording was started")
 
         launch {
-            audioDataChannel.consumeEach { client::sendAudioBuffer }
+            audioDataChannel.consumeEach {
+                L.d("Send data ${it.size}")
+                client::sendAudioBuffer
+            }
         }
     }
 
     private fun stopRecording() {
-        recorder.stopAudioRecording()
-        job.cancelChildren()
+        launch {
+            recorder.stopRecording()
+        }
         L.d("Recording was stopped")
     }
 
     val speechToText = object : SpeechToText() {
 
-        override fun cancelRecognition() {
+        override suspend fun cancelRecognition() {
             currentSessionId?.let { sessionId ->
                 client.endSession(sessionId, null)
             }
@@ -150,12 +153,11 @@ class SnipsKit(
             return channel
         }
 
-        override fun stopRecognition() {
+        override suspend fun stopRecognition() {
             currentSessionId?.let { sessionId ->
                 client.endSession(sessionId, null)
             }
         }
-
     }
 
     val voiceTrigger = object : VoiceTrigger {
@@ -175,14 +177,8 @@ class SnipsKit(
     val dialogApi = object : DialogApi {
         override fun destroy() {}
 
-        override suspend fun send(request: Request): Response? {
-            return if (intentResult?.input == request.query) {
-                Response(
-                    query = intentResult?.input,
-                    action = intentResult?.intent?.intentName
-                )
-            } else null
-        }
-
+        override suspend fun send(request: Request) = Response(
+                query = intentResult?.input,
+                action = intentResult?.intent?.intentName)
     }
 }
